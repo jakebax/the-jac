@@ -14,10 +14,8 @@ const UserLinks = (props) => {
   return (
     <div className='user-links'>
       {userLinks.map((link) => (
-        <a href={link.url}>
-          <button type='button' key={link.label}>
-            {labeled ? link.label : ''}
-          </button>
+        <a href={link.url} key={link.label}>
+          <button type='button'>{labeled ? link.label : ''}</button>
         </a>
       ))}
     </div>
