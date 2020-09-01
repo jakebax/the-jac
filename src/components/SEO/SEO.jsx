@@ -4,45 +4,23 @@ import urljoin from 'url-join'
 import moment from 'moment'
 import config from '../../../data/SiteConfig'
 
+const getImagePath = (imageURI) => {
+  if (!imageURI.match(`(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]`))
+    return urljoin(config.siteUrl, config.pathPrefix, imageURI)
+
+  return imageURI
+}
+
 const SEO = (props) => {
-  const { postNode, postPath, postSEO } = props
-  let title
-  let description
-  let image
-  let postURL
+  const { postNode: { frontmatter = {}, excerpt } = {}, postPath, postSEO } = props
+  const { cover, date, descrption: postDescription, title: postTitle } = frontmatter
 
-  if (postSEO) {
-    const postMeta = postNode.frontmatter
-    ;({ title } = postMeta)
-    description = postMeta.description ? postMeta.description : postNode.excerpt
-    image = postMeta.cover
-    postURL = urljoin(config.siteUrl, config.pathPrefix, postPath)
-  } else {
-    title = config.siteTitle
-    description = config.siteDescription
-    image = config.siteLogo
-  }
+  const title = postSEO ? postTitle : config.siteTitle
+  const description = postSEO ? postDescription : excerpt
+  const postURL = postSEO && urljoin(config.siteUrl, config.pathPrefix, postPath)
+  const image = getImagePath(postSEO ? cover : config.siteLogo)
 
-  const getImagePath = (imageURI) => {
-    if (!imageURI.match(`(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]`))
-      return urljoin(config.siteUrl, config.pathPrefix, imageURI)
-
-    return imageURI
-  }
-
-  const getPublicationDate = () => {
-    if (!postNode) return null
-
-    if (!postNode.frontmatter) return null
-
-    if (!postNode.frontmatter.date) return null
-
-    return moment(postNode.frontmatter.date, config.dateFromFormat).toDate()
-  }
-
-  image = getImagePath(image)
-
-  const datePublished = getPublicationDate()
+  const datePublished = date && moment(date, config.dateFromFormat).toDate()
 
   const authorJSONLD = {
     '@type': 'Person',
