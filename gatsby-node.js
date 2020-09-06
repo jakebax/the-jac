@@ -6,27 +6,30 @@ const moment = require('moment')
 const siteConfig = require('./data/SiteConfig')
 
 const hasOwnProperty = (obj, property) => Object.prototype.hasOwnProperty.call(obj, property)
+const getSlug = (node, dir, name) => {
+  const hasFrontMatter = hasOwnProperty(node, 'frontmatter')
+  const hasSlug = hasFrontMatter && hasOwnProperty(node, 'slug')
+  const hasTitle = hasFrontMatter && hasOwnProperty(node, 'title')
+
+  return (
+    (hasSlug && `/${_.kebabCase(node.frontmatter.slug)}`) ||
+    (hasTitle && `/${_.kebabCase(node.frontmatter.title)}`) ||
+    (name !== 'index' && dir !== '' && `/${dir}/${name}/`) ||
+    (dir === '' && `/${name}/`) ||
+    `/${dir}/`
+  )
+}
 
 exports.onCreateNode = ({ node, actions, getNode }) => {
   const { createNodeField } = actions
 
-  // work out and add the slug and date fields to the MarkdownRemark nodes
   if (node.internal.type === 'MarkdownRemark') {
     const fileNode = getNode(node.parent)
     const { dir, name } = path.parse(fileNode.relativePath)
 
-    const hasFrontMatter = hasOwnProperty(node, 'frontmatter')
-    const hasSlug = hasFrontMatter && hasOwnProperty(node, 'slug')
-    const hasTitle = hasFrontMatter && hasOwnProperty(node, 'title')
+    const slug = getSlug(node, name, dir)
 
-    const slug =
-      (hasSlug && `/${_.kebabCase(node.frontmatter.slug)}`) ||
-      (hasTitle && `/${_.kebabCase(node.frontmatter.title)}`) ||
-      (name !== 'index' && dir !== '' && `/${dir}/${name}/`) ||
-      (dir === '' && `/${name}/`) ||
-      `/${dir}/`
-
-    if (hasFrontMatter && hasOwnProperty(node.frontmatter, 'date')) {
+    if (hasOwnProperty(node, 'frontmatter') && hasOwnProperty(node.frontmatter, 'date')) {
       const date = moment(node.frontmatter.date, siteConfig.dateFromFormat)
 
       if (!date.isValid) {
